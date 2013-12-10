@@ -1,6 +1,6 @@
 {
   "name": "sternchen",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "custom actano reporter (in memorial to my lovely mother sheep sternchen)",
     "scripts": {
         "prepublish": "cake build"
