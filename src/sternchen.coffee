@@ -35,7 +35,7 @@ class Sternchen
             if (err.stack)
                 console.log(err.stack.replace(/^/gm, '  '))
 
-        runner.on 'end', =>
+        @runner.on 'end', =>
             console.log('# tests ' + (@passes + @failures));
             console.log('# pass ' + @passes);
             console.log('# fail ' + @failures);
