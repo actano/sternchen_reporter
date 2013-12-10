@@ -27,5 +27,5 @@
   "directories": {
         "lib": "./lib"
   },
-  "main": "./lib/index"
+  "main": "./lib/sternchen"
 }

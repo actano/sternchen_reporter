@@ -6,9 +6,7 @@
 
 require('chai').Assertion.includeStack = true
 
-
-
-exports = module.exports = Sternchen;
+module.exports = Sternchen
 
 class Sternchen
     constructor: (@runner) ->
