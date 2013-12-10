@@ -1,5 +1,5 @@
 ###
-    custom actano reporter
+    custom actano reporter (derived from the mocha tap reporter)
 ###
 
 # set the global state to enforce stacktrace for chai AssertionErrors
