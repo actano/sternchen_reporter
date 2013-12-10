@@ -10,7 +10,7 @@
     },
   "dependencies": {
      "coffee-script": ">=1.6.2",
-      "chai": "1.5.x"
+      "chai": "*"
   },
   "repository": {
     "type": "git",

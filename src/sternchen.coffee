@@ -6,8 +6,6 @@
 
 require('chai').Assertion.includeStack = true
 
-module.exports = Sternchen
-
 class Sternchen
     constructor: (@runner) ->
         @n = 1
@@ -45,3 +43,6 @@ class Sternchen
 
     title: (test) ->
         return test.parent.fullTitle() + " : " + test.title;
+
+module.exports = Sternchen
+
