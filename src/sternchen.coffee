@@ -31,7 +31,7 @@ class Sternchen
 
         @runner.on 'fail', (test, err) =>
             @failures++;
-            console.log('not ok %d %s', @n, @title(test));
+            console.log('mocha not ok %d %s', @n, @title(test));
             if (err.stack)
                 console.log(err.stack.replace(/^/gm, '  '))
 
