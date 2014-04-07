@@ -5,6 +5,7 @@
 # set the global state to enforce stacktrace for chai AssertionErrors
 
 require('chai').Assertion.includeStack = true
+fs = require 'fs'
 
 class Sternchen
     constructor: (@runner) ->
@@ -13,29 +14,97 @@ class Sternchen
         @failures = 0;
         @initalizeEvents()
 
+    write: (str) ->
+        if @fd?
+            buf = new Buffer str
+            fs.writeSync @fd, buf, 0, buf.length, null
+
+    htmlEscape: (str) ->
+        String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+
+    endSuite: =>
+        if @currentSuite?
+            duration = new Date - @currentSuite.start
+
+            @write '<testsuite'
+            @write ' name="' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
+            @write ' tests="' + @currentSuite.tests.length + '"'
+            @write ' failures="' + @currentSuite.failures + '"'
+            @write ' skipped="' + (@currentSuite.tests.length - @currentSuite.failures - @currentSuite.passes) + '"'
+            @write ' timestamp="' + @currentSuite.start.toUTCString() + '"'
+            @write ' time="' + (duration / 1000) + '">\n'
+
+            for test in @currentSuite.tests
+                @write '<testcase'
+                @write ' classname="' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
+                @write ' name="' + @htmlEscape(test.title) + '"'
+                @write ' time="' + (test.duration / 1000) + '"'
+                if test.state == "failed"
+                    @write '>\n'
+                    @write '<failure message="'
+                    @write @htmlEscape(test.err.message) if test.err.message?
+                    @write '>\n'
+                    @write @htmlEscape(test.err)
+                    @write '\n</failure>\n'
+                    @write '</testcase>\n'
+                else
+                    @write '/>\n'
+
+            @write '</testsuite>\n'
+
+    startSuite: (suite) =>
+        @currentSuite = {
+            suite: suite,
+            tests: [],
+            start: new Date
+            failures: 0
+            passes: 0
+        }
+
     initalizeEvents: ->
         @runner.on 'start', =>
+            path = process.env.REPORT_FILE
+            @fd = fs.openSync(path, 'w') if path?
+            @write '<testsuites name="Mocha Tests">\n'
+
             total = @runner.grepTotal(@runner.suite)
             console.log('%d..%d', 1, total)
 
-        @runner.on 'test end', =>
+        @runner.on 'test', (test) =>
+            if test.parent.fullTitle() != @lastSuiteTitle
+                @endSuite()
+                @lastSuiteTitle = test.parent.fullTitle()
+                @startSuite(test.parent)
+
+        @runner.on 'test end', (test) =>
+            @currentSuite.tests.push test if @currentSuite?.tests?
             ++@n
 
         @runner.on 'pending', (test) =>
             console.log('ok %d %s # SKIP -', @n, @title(test))
 
-
         @runner.on 'pass', (test) =>
+            @currentSuite.passes++
             @passes++
             console.log('ok %d %s', @n, @title(test))
 
         @runner.on 'fail', (test, err) =>
+            @currentSuite.failures++
             @failures++;
             console.log('mocha not ok %d %s', @n, @title(test));
             if (err.stack)
                 console.log(err.stack.replace(/^/gm, '  '))
 
         @runner.on 'end', =>
+            @endSuite()
+            @write '</testsuites>'
+            fs.closeSync fd if fd?
+
             console.log('# tests ' + (@passes + @failures));
             console.log('# pass ' + @passes);
             console.log('# fail ' + @failures);
