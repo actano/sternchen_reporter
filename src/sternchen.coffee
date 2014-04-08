@@ -5,6 +5,7 @@
 # set the global state to enforce stacktrace for chai AssertionErrors
 
 require('chai').Assertion.includeStack = true
+path = require 'path'
 fs = require 'fs'
 
 class Sternchen
@@ -32,7 +33,7 @@ class Sternchen
             duration = new Date - @currentSuite.start
 
             @write '<testsuite'
-            @write ' name="' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
+            @write ' name="' + @package + '.' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
             @write ' tests="' + @currentSuite.tests.length + '"'
             @write ' failures="' + @currentSuite.failures + '"'
             @write ' skipped="' + (@currentSuite.tests.length - @currentSuite.failures - @currentSuite.passes) + '"'
@@ -41,7 +42,7 @@ class Sternchen
 
             for test in @currentSuite.tests
                 @write '<testcase'
-                @write ' classname="' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
+                @write ' classname="' + @package + '.' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
                 @write ' name="' + @htmlEscape(test.title) + '"'
                 @write ' time="' + (test.duration / 1000) + '"'
                 if test.state == "failed"
@@ -68,9 +69,14 @@ class Sternchen
 
     initalizeEvents: ->
         @runner.on 'start', =>
-            path = process.env.REPORT_FILE
-            @fd = fs.openSync(path, 'w') if path?
-            @write '<testsuites name="Mocha Tests">\n'
+            report_file = process.env.REPORT_FILE
+
+            if report_file?
+                @package = path.join(path.dirname(report_file), path.basename(report_file, path.extname(report_file))).replace /\//g, '.'
+                prefix = process.env.PREFIX
+                report_file = path.join prefix, report_file if prefix?
+                @fd = fs.openSync(report_file, 'w')
+                @write '<testsuites name="Mocha Tests">\n'
 
             total = @runner.grepTotal(@runner.suite)
             console.log('%d..%d', 1, total)
@@ -94,7 +100,7 @@ class Sternchen
             console.log('ok %d %s', @n, @title(test))
 
         @runner.on 'fail', (test, err) =>
-            @currentSuite.failures++
+            @currentSuite.failures++ if @currentSuite?
             @failures++;
             console.log('mocha not ok %d %s', @n, @title(test));
             if (err.stack)
