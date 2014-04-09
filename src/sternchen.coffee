@@ -33,7 +33,7 @@ class Sternchen
             duration = new Date - @currentSuite.start
 
             @write '<testsuite'
-            @write ' name="' + @package + '.' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
+            @write ' name="' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
             @write ' tests="' + @currentSuite.tests.length + '"'
             @write ' failures="' + @currentSuite.failures + '"'
             @write ' skipped="' + (@currentSuite.tests.length - @currentSuite.failures - @currentSuite.passes) + '"'
@@ -42,8 +42,8 @@ class Sternchen
 
             for test in @currentSuite.tests
                 @write '<testcase'
-                @write ' classname="' + @package + '.' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
-                @write ' name="' + @htmlEscape(test.title) + '"'
+                @write ' classname="' + @package + '"'
+                @write ' name="' + @htmlEscape(@currentSuite.suite.title + '.' + test.title) + '"'
                 @write ' time="' + (test.duration / 1000) + '"'
                 if test.state == "failed"
                     @write '>\n'
