@@ -1,6 +1,6 @@
 {
   "name": "sternchen",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "custom actano reporter (in memorial to my lovely mother sheep sternchen)",
     "scripts": {
         "prepublish": "cake build"
@@ -22,6 +22,9 @@
     "actano"
   ],
   "author": "pithu <philipp.thuerwaechter@actano.de>",
+  "contributors": [
+    "Thomas Rucker <t.rucker@itsonix.eu>"
+  ],
   "bugs": {
     "url": "https://github.com/pithu/sternchen_reporter/issues"
   },
