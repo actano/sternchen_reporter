@@ -48,9 +48,13 @@ class Sternchen
                 if test.state == "failed"
                     @write '>\n'
                     @write '<failure message="'
-                    @write @htmlEscape(test.err.message) if test.err.message?
-                    @write '>\n'
-                    @write @htmlEscape(test.err)
+                    if test.err?.message?
+                        @write @htmlEscape(test.err.message)
+                    else
+                        @write 'unknown error'
+                    @write '">\n'
+                    if test.err?.stack?
+                        @write @htmlEscape test.err.stack.replace /^/gm, '  '
                     @write '\n</failure>\n'
                     @write '</testcase>\n'
                 else
@@ -100,6 +104,9 @@ class Sternchen
             console.log('ok %d %s', @n, @title(test))
 
         @runner.on 'fail', (test, err) =>
+            # There are some cases in which test.err is undefined.
+            # So we set it here to be sure that we have an error for our xml report.
+            test.err = err
             @currentSuite.failures++ if @currentSuite?
             @failures++;
             console.log('mocha not ok %d %s', @n, @title(test));
