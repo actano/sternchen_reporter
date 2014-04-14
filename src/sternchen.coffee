@@ -93,7 +93,7 @@ class Sternchen
                 @write '<testcase'
                 @write ' classname="' + @package + '"'
                 @write ' name="' + @htmlEscape(@currentSuite.suite.title + '.' + test.title) + '"'
-                @write ' time="' + (test.duration / 1000) + '"'
+                @write ' time="' + (test.duration / 1000) + '"' if not test.skipped
                 if test.state == "failed"
                     @write '>\n'
                     @write '<failure message="'
@@ -107,7 +107,12 @@ class Sternchen
                     @write '\n</failure>\n'
                     @write '</testcase>\n'
                 else
-                    @write '/>\n'
+                    if test.skipped
+                        @write '>\n'
+                        @write '<skipped/>\n'
+                        @write '</testcase>\n'
+                    else
+                        @write '/>\n'
 
             @write '</testsuite>\n'
 
@@ -145,6 +150,7 @@ class Sternchen
             ++@n
 
         @runner.on 'pending', (test) =>
+            test.skipped = true
             console.log('ok %d %s # SKIP -', @n, @title(test))
 
         @runner.on 'pass', (test) =>
