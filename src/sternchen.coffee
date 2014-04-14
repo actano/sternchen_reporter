@@ -5,8 +5,53 @@
 # set the global state to enforce stacktrace for chai AssertionErrors
 
 require('chai').Assertion.includeStack = true
-path = require 'path'
 fs = require 'fs'
+
+if phantom?
+    # if we run in phantomjs, we can't require node modules
+    join = ->
+        args = Array.prototype.filter.call arguments, (elt) ->
+            typeof elt == "string"
+        args.join '/'
+
+    dirname = (p) ->
+        return if not p? or typeof p != "string"
+
+        split = p.split '/'
+        slice = split.slice 0, -1
+        if slice.length == 0
+            '.'
+        else
+            slice.join '/'
+
+    basename = (p, ext) ->
+        return if not p? or typeof p != "string"
+
+        split = p.split '/'
+        base = (split.slice -1)[0]
+
+        if ext? and base.slice -1 * ext.length == ext
+            base = base.slice 0, -1 * ext.length
+
+        base
+
+    extname = (p) ->
+        return if not p? or typeof p != "string"
+
+        idx = p.lastIndexOf '.'
+
+        return p if idx <= 0
+        p.slice idx
+
+    path =
+        join: join
+        dirname: dirname
+        basename: basename
+        extname: extname
+
+    fs.openSync = fs.open
+else
+    path = require 'path'
 
 class Sternchen
     constructor: (@runner) ->
@@ -17,8 +62,12 @@ class Sternchen
 
     write: (str) ->
         if @fd?
-            buf = new Buffer str
-            fs.writeSync @fd, buf, 0, buf.length, null
+            if phantom?
+                @fd.write str
+                @fd.flush()
+            else
+                buf = new Buffer str
+                fs.writeSync @fd, buf, 0, buf.length, null
 
     htmlEscape: (str) ->
         String(str)
