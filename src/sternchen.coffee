@@ -50,21 +50,27 @@ if phantom?
         extname: extname
 
     fs.openSync = fs.open
+
+    fs.closeSync = (fd) ->
+        fd.close()
 else
     path = require 'path'
 
 class Sternchen
     constructor: (@runner) ->
-        @n = 1
-        @passes = 0
-        @failures = 0;
+        @stats =
+            suites: 0
+            tests: 0
+            passes: 0
+            pending: 0
+            failures: 0
+        @runner.stats = @stats
         @initalizeEvents()
 
     write: (str) ->
         if @fd?
             if phantom?
                 @fd.write str
-                @fd.flush()
             else
                 buf = new Buffer str
                 fs.writeSync @fd, buf, 0, buf.length, null
@@ -127,6 +133,7 @@ class Sternchen
 
     initalizeEvents: ->
         @runner.on 'start', =>
+            @stats.start = new Date
             report_file = process.env.REPORT_FILE
 
             if report_file?
@@ -139,6 +146,9 @@ class Sternchen
             total = @runner.grepTotal(@runner.suite)
             console.log('%d..%d', 1, total)
 
+        @runner.on 'suite', (suite) =>
+            suite.root or @stats.suites++
+
         @runner.on 'test', (test) =>
             if test.parent.fullTitle() != @lastSuiteTitle
                 @endSuite()
@@ -146,37 +156,39 @@ class Sternchen
                 @startSuite(test.parent)
 
         @runner.on 'test end', (test) =>
+            @stats.tests++
             @currentSuite.tests.push test if @currentSuite?.tests?
-            ++@n
 
         @runner.on 'pending', (test) =>
+            @stats.pending++
             test.skipped = true
-            console.log('ok %d %s # SKIP -', @n, @title(test))
+            console.log('ok %d %s # SKIP -', @stats.tests + 1, @title(test))
 
         @runner.on 'pass', (test) =>
+            @stats.passes++
             @currentSuite.passes++
-            @passes++
-            console.log('ok %d %s', @n, @title(test))
+            console.log('ok %d %s', @stats.tests + 1, @title(test))
 
         @runner.on 'fail', (test, err) =>
             # There are some cases in which test.err is undefined.
             # So we set it here to be sure that we have an error for our xml report.
             test.err = err
+            @stats.failures++
             @currentSuite.failures++ if @currentSuite?
-            @failures++;
-            console.log('mocha not ok %d %s', @n, @title(test));
+            console.log('mocha not ok %d %s', @stats.tests, @title(test));
             if (err.stack)
                 console.log(err.stack.replace(/^/gm, '  '))
 
         @runner.on 'end', =>
+            @stats.end = new Date
+            @stats.duration = @stats.end - @stats.start
             @endSuite()
             @write '</testsuites>'
-            fs.closeSync fd if fd?
+            fs.closeSync @fd if @fd?
 
-            console.log('# tests ' + (@passes + @failures));
-            console.log('# pass ' + @passes);
-            console.log('# fail ' + @failures);
-
+            console.log('# tests ' + (@stats.passes + @stats.failures));
+            console.log('# pass ' + @stats.passes);
+            console.log('# fail ' + @stats.failures);
 
     title: (test) ->
         return test.parent.fullTitle() + " : " + test.title;
