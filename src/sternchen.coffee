@@ -59,6 +59,22 @@ if phantom?
 else
     path = require 'path'
 
+class PhantomError
+    constructor: (@message, stack) ->
+        @stack = ''
+
+        for entry in stack
+            @stack += "\n\t#{entry.function} at #{entry.file}:#{entry.line}"
+
+    toString: ->
+        @message + @stack
+
+preTestErrors = []
+
+if casper?
+    casper.on 'error', (msg, trace) ->
+        err = new PhantomError(msg, trace)
+        preTestErrors.push err
 
 class ReportWriter
     write: (str) ->
@@ -154,9 +170,20 @@ class Sternchen extends ReportWriter
             passes: 0
         }
 
+    writePreTestErrors: ->
+        if preTestErrors.length > 0
+            @write '<testcase classname="' + @htmlEscape(process.env.REPORT_FILE) + '" name="ERROR">\n'
+            for err in preTestErrors
+                @write '<failure message="' + @htmlEscape(err.message) + '">\n'
+                @write @htmlEscape(err.stack) + '\n' if err.stack?
+                @write '</failure>\n'
+            @write '</testcase>\n'
+            @flush()
+
     initalizeEvents: ->
         @runner.on 'start', =>
             @createReportFile()
+            @writePreTestErrors()
 
             @stats.start = new Date
 
