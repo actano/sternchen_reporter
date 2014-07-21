@@ -11,9 +11,11 @@ describe 'Sternchen Reporter', ->
             cb = toFileName
             toFileName = ""
 
-        console.log "exec: REPORT_FILE=#{toFileName} `npm bin`/mocha -R #{__dirname}/../lib/index.js --compilers coffee:coffee-script,coffee-trc:coffee-errors #{__dirname + '/testData/' + fileName}"
-        child = exec "REPORT_FILE=#{toFileName} `npm bin`/mocha -R #{__dirname}/../lib/index.js --compilers coffee:coffee-script,coffee-trc:coffee-errors #{__dirname + '/testData/' + fileName}",
-            cb
+        command = "REPORT_FILE=#{toFileName} " +
+            "`npm bin`/mocha -R #{__dirname}/../lib/index.js " +
+            "--compilers coffee:coffee-script,coffee-trc:coffee-errors " +
+            "#{__dirname + '/testData/' + fileName}"
+        child = exec command, cb
 
     _checkResult = (consoleString, {totalTestCount, runTestCount, passedTestCount, failureTestCount}) ->
         regExTotalCount = new RegExp "1\.\.#{totalTestCount}"
@@ -39,6 +41,9 @@ describe 'Sternchen Reporter', ->
 
                 cb()
 
+    _deleteReportFile = (fileName, cb) ->
+        fs.unlink fileName, cb
+
     it 'should report test results to console', (done) ->
         _triggerTest 'mocha_test.coffee', (error, stdout, stderr) ->
             expect(error).to.not.exist
@@ -49,19 +54,23 @@ describe 'Sternchen Reporter', ->
                 failureTestCount: 0
             done()
 
-    it.only 'should report test results to file system (process.env.REPORT_FILE)', (done) ->
-        _triggerTest 'mocha_test.coffee', 'tmp_test.xml', (error, stdout, stderr) ->
+    it 'should report test results to file system (process.env.REPORT_FILE)', (done) ->
+        reportFileName = 'tmp_test.xml'
+        _triggerTest 'mocha_test.coffee', reportFileName, (error, stdout, stderr) ->
             expect(error).to.not.exist
-
-            _checkResultFromFile 'tmp_test.xml',
+            
+            _checkResultFromFile reportFileName,
                 totalTestCount: 6
                 skippedTestCount: 4
                 failureTestCount: 0,
                 (err) ->
-                    done err
+                    _deleteReportFile reportFileName, (error) ->
+                        expect(error).not.to.exist
+                        done err
 
-    it 'should work in a casper/phantom environment', (done) ->
 
-    it 'should report pre test errors in nodeJS environment', (done) ->
+    it.skip 'should work in a casper/phantom environment', (done) ->
 
-    it 'should report pre test errors in casper/phantom environment', (done) ->
+    it.skip 'should report pre test errors in nodeJS environment', (done) ->
+
+    it.skip 'should report pre test errors in casper/phantom environment', (done) ->
