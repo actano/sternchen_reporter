@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "custom actano reporter (in memorial to my lovely mother sheep sternchen)",
     "scripts": {
-        "prepublish": "cake build"
+        "prepublish": "cake build",
+        "test" : "`npm bin`/mocha -R tap --compilers coffee:coffee-script,coffee-trc:coffee-errors test/*.coffee"
     },
     "engines": {
         "node": ">=0.10.0"
@@ -11,6 +12,12 @@
   "dependencies": {
      "coffee-script": ">=1.6.2",
       "chai": "*"
+  },
+  "devDependencies": {
+     "coffee-errors": "*",
+     "casperjs": "*",
+     "mocha": "*",
+     "xml2js": "*"
   },
   "repository": {
     "type": "git",
