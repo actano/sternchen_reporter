@@ -56,17 +56,8 @@ if phantom?
 else
     path = require 'path'
 
-class Sternchen
-    constructor: (@runner) ->
-        @stats =
-            suites: 0
-            tests: 0
-            passes: 0
-            pending: 0
-            failures: 0
-        @runner.stats = @stats
-        @initalizeEvents()
 
+class ReportWriter
     write: (str) ->
         if @fd?
             if phantom?
@@ -82,6 +73,32 @@ class Sternchen
             .replace(/'/g, '&#39;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
+
+    createReportFile: ->
+        report_file = process.env.REPORT_FILE
+
+        if report_file?
+            @package = path.join(path.dirname(report_file), path.basename(report_file, path.extname(report_file))).replace /\//g, '.'
+            prefix = process.env.PREFIX
+            report_file = path.join prefix, report_file if prefix?
+            @fd = fs.openSync(report_file, 'w')
+            @write '<testsuites name="Mocha Tests">\n'
+
+    closeReportFile: ->
+        if @fd?
+            @write '</testsuites>'
+            fs.closeSync @fd if @fd?
+
+class Sternchen extends ReportWriter
+    constructor: (@runner) ->
+        @stats =
+            suites: 0
+            tests: 0
+            passes: 0
+            pending: 0
+            failures: 0
+        @runner.stats = @stats
+        @initalizeEvents()
 
     endSuite: =>
         if @currentSuite?
@@ -133,15 +150,9 @@ class Sternchen
 
     initalizeEvents: ->
         @runner.on 'start', =>
-            @stats.start = new Date
-            report_file = process.env.REPORT_FILE
+            @createReportFile()
 
-            if report_file?
-                @package = path.join(path.dirname(report_file), path.basename(report_file, path.extname(report_file))).replace /\//g, '.'
-                prefix = process.env.PREFIX
-                report_file = path.join prefix, report_file if prefix?
-                @fd = fs.openSync(report_file, 'w')
-                @write '<testsuites name="Mocha Tests">\n'
+            @stats.start = new Date
 
             total = @runner.grepTotal(@runner.suite)
             console.log('%d..%d', 1, total)
@@ -183,8 +194,7 @@ class Sternchen
             @stats.end = new Date
             @stats.duration = @stats.end - @stats.start
             @endSuite()
-            @write '</testsuites>'
-            fs.closeSync @fd if @fd?
+            @closeReportFile()
 
             console.log('# tests ' + (@stats.passes + @stats.failures));
             console.log('# pass ' + @stats.passes);
