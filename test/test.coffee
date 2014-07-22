@@ -8,15 +8,20 @@ uuid = require 'node-uuid'
 rimraf = require 'rimraf'
 
 describe 'Sternchen Reporter', ->
-    _triggerTest = (fileName, toFileName, cb) ->
-        if typeof toFileName is 'function'
-            cb = toFileName
-            toFileName = ""
+    _triggerTest = (fileName, opts, cb) ->
+        if typeof opts is 'function'
+            cb = opts
+            opts = {}
 
-        command = "REPORT_FILE=#{toFileName} " +
-            "`npm bin`/mocha -R #{__dirname}/../lib/index.js " +
+        command = ''
+
+        for key, value of opts
+            command += "#{key}=#{value} "
+
+        command += "`npm bin`/mocha -R #{__dirname}/../lib/index.js " +
             "--compilers coffee:coffee-script,coffee-trc:coffee-errors " +
             "#{__dirname + '/testData/' + fileName}"
+
         exec command, cb
 
     _checkResult = (consoleString, {totalTestCount, runTestCount, passedTestCount, failureTestCount}) ->
@@ -63,7 +68,7 @@ describe 'Sternchen Reporter', ->
 
     it 'should report test results to file system (process.env.REPORT_FILE)', (done) ->
         reportFileName = path.join 'tmp', uuid.v4()
-        _triggerTest 'mocha_test.coffee', reportFileName, (error, stdout, stderr) ->
+        _triggerTest 'mocha_test.coffee', {"REPORT_FILE": reportFileName}, (error, stdout, stderr) ->
             expect(error).to.not.exist
             
             _checkResultFromFile reportFileName,
