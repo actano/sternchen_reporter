@@ -48,19 +48,22 @@ describe 'Sternchen Reporter', ->
         expect(consoleString).to.match regExPassedTestCount
         expect(consoleString).to.match regExFailureTestCount
 
-    _checkResultFromFile = (fileName, {totalTestCount, skippedTestCount, failureTestCount}, cb) ->
+    _parseResultFile = (fileName, cb) ->
         fs.readFile fileName, {encoding: 'utf8'}, (err, data) ->
             return cb err if err?
-            parseXml data, (err, result) ->
-                return cb err if err?
+            parseXml data, cb
 
-                results = result?.testsuites?.testsuite?[0]?['$']
-                expect(results).to.exist
-                expect(results.tests).to.equal "#{totalTestCount}"
-                expect(results.skipped).to.equal "#{skippedTestCount}"
-                expect(results.failures).to.equal "#{failureTestCount}"
+    _checkResultFromFile = (fileName, {totalTestCount, skippedTestCount, failureTestCount}, cb) ->
+        _parseResultFile fileName, (err, result) ->
+            return cb err if err?
 
-                cb()
+            results = result?.testsuites?.testsuite?[0]?['$']
+            expect(results).to.exist
+            expect(results.tests).to.equal "#{totalTestCount}"
+            expect(results.skipped).to.equal "#{skippedTestCount}"
+            expect(results.failures).to.equal "#{failureTestCount}"
+
+            cb()
 
     _newTempFileName = ->
         path.join tempDir, uuid.v4()
