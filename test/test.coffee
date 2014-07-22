@@ -1,12 +1,14 @@
 {exec} = require 'child_process'
 fs = require 'fs'
+path = require 'path'
 
 {expect} = require 'chai'
 parseXml = require('xml2js').parseString
+uuid = require 'node-uuid'
+rimraf = require 'rimraf'
 
 describe 'Sternchen Reporter', ->
     _triggerTest = (fileName, toFileName, cb) ->
-
         if typeof toFileName is 'function'
             cb = toFileName
             toFileName = ""
@@ -15,7 +17,7 @@ describe 'Sternchen Reporter', ->
             "`npm bin`/mocha -R #{__dirname}/../lib/index.js " +
             "--compilers coffee:coffee-script,coffee-trc:coffee-errors " +
             "#{__dirname + '/testData/' + fileName}"
-        child = exec command, cb
+        exec command, cb
 
     _checkResult = (consoleString, {totalTestCount, runTestCount, passedTestCount, failureTestCount}) ->
         regExTotalCount = new RegExp "1\.\.#{totalTestCount}"
@@ -41,8 +43,13 @@ describe 'Sternchen Reporter', ->
 
                 cb()
 
-    _deleteReportFile = (fileName, cb) ->
-        fs.unlink fileName, cb
+    before (done) ->
+        fs.exists 'tmp', (exists) ->
+            return done() if exists
+            fs.mkdir 'tmp', done
+
+    after (done) ->
+        rimraf 'tmp', done
 
     it 'should report test results to console', (done) ->
         _triggerTest 'mocha_test.coffee', (error, stdout, stderr) ->
@@ -55,7 +62,7 @@ describe 'Sternchen Reporter', ->
             done()
 
     it 'should report test results to file system (process.env.REPORT_FILE)', (done) ->
-        reportFileName = 'tmp_test.xml'
+        reportFileName = path.join 'tmp', uuid.v4()
         _triggerTest 'mocha_test.coffee', reportFileName, (error, stdout, stderr) ->
             expect(error).to.not.exist
             
@@ -64,9 +71,7 @@ describe 'Sternchen Reporter', ->
                 skippedTestCount: 4
                 failureTestCount: 0,
                 (err) ->
-                    _deleteReportFile reportFileName, (error) ->
-                        expect(error).not.to.exist
-                        done err
+                    done err
 
 
     it.skip 'should work in a casper/phantom environment', (done) ->
