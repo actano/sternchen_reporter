@@ -137,7 +137,7 @@ describe 'Sternchen Reporter', ->
             env:
                 "REPORT_FILE": reportFileName
 
-        _triggerTest 'mocha_test.coffee', opts, (error, stdout, stderr) ->
+        _triggerTest 'casper_test.coffee', opts, (error, stdout, stderr) ->
             expect(error).to.exist
             expect(error.code).to.equal 1
 
