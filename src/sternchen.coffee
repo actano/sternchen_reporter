@@ -72,9 +72,12 @@ class PhantomError
 preTestErrors = []
 
 if casper?
-    casper.on 'error', (msg, trace) ->
+    _addPhantomError = (msg, trace) ->
         err = new PhantomError(msg, trace)
         preTestErrors.push err
+
+    casper.on 'error', _addPhantomError
+    casper.on 'page.error', _addPhantomError
 
 class ReportWriter
     write: (str) ->
