@@ -11,12 +11,12 @@ describe 'Sternchen Reporter', ->
     tempDir = 'tmp'
 
     _mochaCommandLine = (fileName) ->
-        "`npm bin`/mocha -R #{__dirname}/../lib/index.js " +
+        "mocha -R #{__dirname}/../lib/index.js " +
         "--compilers coffee:coffee-script,coffee-trc:coffee-errors " +
         "#{__dirname + '/testData/' + fileName}"
 
     _casperCommandLine = (fileName) ->
-        "`npm bin`/mocha-casperjs --expect --reporter=#{__dirname}/../lib/index.js #{__dirname}/testData/#{fileName}"
+        "mocha-casperjs --expect --reporter=#{__dirname}/../lib/index.js #{__dirname}/testData/#{fileName}"
 
     _triggerTest = (fileName, opts, cb) ->
         if typeof opts is 'function'
