@@ -64,7 +64,7 @@ class PhantomError
         @stack = ''
 
         for entry in stack
-            @stack += "\n\t#{entry.function} at #{entry.file}:#{entry.line}"
+            @stack += "\t#{entry.function} at #{entry.file}:#{entry.line}\n"
 
     toString: ->
         @message + @stack
