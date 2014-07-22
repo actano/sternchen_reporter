@@ -43,7 +43,8 @@ describe 'Sternchen Reporter', ->
             parseXml data, (err, result) ->
                 return cb err if err?
 
-                results = result.testsuites.testsuite[0]['$']
+                results = result?.testsuites?.testsuite?[0]?['$']
+                expect(results).to.exist
                 expect(results.tests).to.equal "#{totalTestCount}"
                 expect(results.skipped).to.equal "#{skippedTestCount}"
                 expect(results.failures).to.equal "#{failureTestCount}"
