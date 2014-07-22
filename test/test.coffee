@@ -66,24 +66,27 @@ describe 'Sternchen Reporter', ->
 
     it 'should report test results to console', (done) ->
         _triggerTest 'mocha_test.coffee', (error, stdout, stderr) ->
-            expect(error).to.not.exist
+            expect(error).to.exist
+            expect(error.code).to.equal 1
+
             _checkResult stdout,
-                totalTestCount: 6
-                runTestCount: 2
+                totalTestCount: 8
+                runTestCount: 3
                 passedTestCount: 2
-                failureTestCount: 0
+                failureTestCount: 1
             done()
 
     it 'should report test results to file system (process.env.REPORT_FILE)', (done) ->
         reportFileName = _newTempFileName()
-        
+
         _triggerTest 'mocha_test.coffee', {"REPORT_FILE": reportFileName}, (error, stdout, stderr) ->
-            expect(error).to.not.exist
-            
+            expect(error).to.exist
+            expect(error.code).to.equal 1
+
             _checkResultFromFile reportFileName,
-                totalTestCount: 6
-                skippedTestCount: 4
-                failureTestCount: 0,
+                totalTestCount: 8
+                skippedTestCount: 5
+                failureTestCount: 1,
                 (err) ->
                     done err
 
@@ -92,12 +95,13 @@ describe 'Sternchen Reporter', ->
 
         _createDir 'tmp/tmp', ->
             _triggerTest 'mocha_test.coffee', {"PREFIX": tempDir, "REPORT_FILE": reportFileName}, (error, stdout, stderr) ->
-                expect(error).to.not.exist
+                expect(error).to.exist
+                expect(error.code).to.equal 1
 
                 _checkResultFromFile path.join(tempDir, reportFileName),
-                    totalTestCount: 6
-                    skippedTestCount: 4
-                    failureTestCount: 0,
+                    totalTestCount: 8
+                    skippedTestCount: 5
+                    failureTestCount: 1,
                     (err) ->
                         done err
 
