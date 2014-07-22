@@ -8,6 +8,8 @@ uuid = require 'node-uuid'
 rimraf = require 'rimraf'
 
 describe 'Sternchen Reporter', ->
+    tempDir = 'tmp'
+
     _triggerTest = (fileName, opts, cb) ->
         if typeof opts is 'function'
             cb = opts
@@ -48,13 +50,19 @@ describe 'Sternchen Reporter', ->
 
                 cb()
 
+    _newTempFileName = ->
+        path.join tempDir, uuid.v4()
+
+    _createDir = (dir, cb) ->
+        fs.exists dir, (exists) ->
+            return cb() if exists
+            fs.mkdir dir, cb
+
     before (done) ->
-        fs.exists 'tmp', (exists) ->
-            return done() if exists
-            fs.mkdir 'tmp', done
+        _createDir tempDir, done
 
     after (done) ->
-        rimraf 'tmp', done
+        rimraf tempDir, done
 
     it 'should report test results to console', (done) ->
         _triggerTest 'mocha_test.coffee', (error, stdout, stderr) ->
@@ -67,7 +75,8 @@ describe 'Sternchen Reporter', ->
             done()
 
     it 'should report test results to file system (process.env.REPORT_FILE)', (done) ->
-        reportFileName = path.join 'tmp', uuid.v4()
+        reportFileName = _newTempFileName()
+        
         _triggerTest 'mocha_test.coffee', {"REPORT_FILE": reportFileName}, (error, stdout, stderr) ->
             expect(error).to.not.exist
             
