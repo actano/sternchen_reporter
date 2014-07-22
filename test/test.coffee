@@ -173,5 +173,16 @@ describe 'Sternchen Reporter', ->
 
             _checkPhantomErrorInFile reportFileName, 'Error: Cannot find module \'does not exist\'', done
 
+    it 'should report uncaught error in HTML page in casper/phantom environment', (done) ->
+        reportFileName = _newTempFileName()
 
-                done()
+        opts =
+            casper: true
+            env:
+                "REPORT_FILE": reportFileName
+
+        _triggerTest 'casper_test_preTestError_inPage.coffee', opts, (error, stdout, stderr) ->
+            expect(error).to.exist
+            expect(error.code).to.equal 255
+
+            _checkPhantomErrorInFile reportFileName, 'Error: pre-test error in page', done
