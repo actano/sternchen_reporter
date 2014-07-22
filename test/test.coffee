@@ -10,19 +10,30 @@ rimraf = require 'rimraf'
 describe 'Sternchen Reporter', ->
     tempDir = 'tmp'
 
+    _mochaCommandLine = (fileName) ->
+        "`npm bin`/mocha -R #{__dirname}/../lib/index.js " +
+        "--compilers coffee:coffee-script,coffee-trc:coffee-errors " +
+        "#{__dirname + '/testData/' + fileName}"
+
+    _casperCommandLine = (fileName) ->
+        "`npm bin`/mocha-casperjs --expect --reporter=#{__dirname}/../lib/index.js #{__dirname}/testData/#{fileName}"
+
     _triggerTest = (fileName, opts, cb) ->
         if typeof opts is 'function'
             cb = opts
-            opts = {}
+            opts =
+                casper: false
+                env: {}
 
         command = ''
 
-        for key, value of opts
+        for key, value of opts.env
             command += "#{key}=#{value} "
 
-        command += "`npm bin`/mocha -R #{__dirname}/../lib/index.js " +
-            "--compilers coffee:coffee-script,coffee-trc:coffee-errors " +
-            "#{__dirname + '/testData/' + fileName}"
+        if opts.casper
+            command += _casperCommandLine fileName
+        else
+            command += _mochaCommandLine fileName
 
         exec command, cb
 
@@ -80,7 +91,11 @@ describe 'Sternchen Reporter', ->
     it 'should report test results to file system (process.env.REPORT_FILE)', (done) ->
         reportFileName = _newTempFileName()
 
-        _triggerTest 'mocha_test.coffee', {"REPORT_FILE": reportFileName}, (error, stdout, stderr) ->
+        opts =
+            env:
+                "REPORT_FILE": reportFileName
+
+        _triggerTest 'mocha_test.coffee', opts, (error, stdout, stderr) ->
             expect(error).to.exist
             expect(error.code).to.equal 1
 
@@ -94,8 +109,13 @@ describe 'Sternchen Reporter', ->
     it 'should respect the PREFIX env variable as path prefix of the test report file', (done) ->
         reportFileName = _newTempFileName()
 
+        opts =
+            env:
+                "PREFIX": tempDir
+                "REPORT_FILE": reportFileName
+
         _createDir 'tmp/tmp', ->
-            _triggerTest 'mocha_test.coffee', {"PREFIX": tempDir, "REPORT_FILE": reportFileName}, (error, stdout, stderr) ->
+            _triggerTest 'mocha_test.coffee', opts, (error, stdout, stderr) ->
                 expect(error).to.exist
                 expect(error.code).to.equal 1
 
