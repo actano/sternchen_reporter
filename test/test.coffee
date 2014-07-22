@@ -150,4 +150,22 @@ describe 'Sternchen Reporter', ->
 
     it.skip 'should report pre test errors in nodeJS environment', (done) ->
 
-    it.skip 'should report pre test errors in casper/phantom environment', (done) ->
+    it 'should report pre test errors in casper/phantom environment', (done) ->
+        reportFileName = _newTempFileName()
+
+        opts =
+            casper: true
+            env:
+                "REPORT_FILE": reportFileName
+
+        _triggerTest 'casper_test_preTestError.coffee', opts, (error, stdout, stderr) ->
+            _parseResultFile reportFileName, (err, result) ->
+                return done err if err?
+
+                failure = result?.testsuites?.testcase?[0]?.failure?[0]
+                expect(failure).to.exist
+                expect(failure['$']?.message).to.exist
+                expect(failure['$'].message).to.equal 'Error: Cannot find module \'does not exist\''
+                expect(failure['_']).to.not.be.empty
+
+                done()
