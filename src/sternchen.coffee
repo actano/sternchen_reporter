@@ -86,7 +86,7 @@ class ReportWriter
                 fs.writeSync @fd, buf, 0, buf.length, null
 
     flush: ->
-        fs.fsyncSync @fd
+        fs.fsyncSync @fd if @fd
 
     htmlEscape: (str) ->
         String(str)
