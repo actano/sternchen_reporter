@@ -157,7 +157,14 @@ describe 'Sternchen Reporter', ->
                 failureTestCount: 1,
                 done
 
-    it.skip 'should report pre test errors in nodeJS environment', (done) ->
+    ###
+        We can't check this here. It has nothing to do with sternchen reporter.
+
+        If there are any uncaught errors in the test script, the node process will fail with exit code 8.
+        We can do nothing about it since the sternchen reporter will never be loaded.
+    ###
+    #it.skip 'should report pre test errors in nodeJS environment', (done) ->
+    #    done()
 
     it 'should report pre test errors in casper/phantom environment', (done) ->
         reportFileName = _newTempFileName()
