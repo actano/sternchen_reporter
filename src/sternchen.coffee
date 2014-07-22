@@ -54,9 +54,6 @@ if phantom?
     fs.closeSync = (fd) ->
         fd.close()
 
-    fs.fsyncSync = (fd) ->
-        fd.flush()
-
     exit = phantom.exit
 else
     path = require 'path'
@@ -110,9 +107,6 @@ class ReportWriter
             else
                 buf = new Buffer str
                 fs.writeSync @fd, buf, 0, buf.length, null
-
-    flush: ->
-        fs.fsyncSync @fd if @fd
 
     htmlEscape: (str) ->
         String(str)
