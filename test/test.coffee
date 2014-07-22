@@ -126,7 +126,24 @@ describe 'Sternchen Reporter', ->
                     (err) ->
                         done err
 
-    it.skip 'should work in a casper/phantom environment', (done) ->
+    it 'should work in a casper/phantom environment', (done) ->
+        reportFileName = _newTempFileName()
+
+        opts =
+            casper: true
+            env:
+                "REPORT_FILE": reportFileName
+
+        _triggerTest 'mocha_test.coffee', opts, (error, stdout, stderr) ->
+            expect(error).to.exist
+            expect(error.code).to.equal 1
+
+            _checkResultFromFile reportFileName,
+                totalTestCount: 8
+                skippedTestCount: 5
+                failureTestCount: 1
+                (err) ->
+                    done err
 
     it.skip 'should report pre test errors in nodeJS environment', (done) ->
 
