@@ -56,8 +56,11 @@ if phantom?
 
     fs.fsyncSync = (fd) ->
         fd.flush()
+
+    exit = phantom.exit
 else
     path = require 'path'
+    exit = process.exit
 
 class PhantomError
     constructor: (@message, stack) ->
@@ -69,15 +72,35 @@ class PhantomError
     toString: ->
         @message + @stack
 
-preTestErrors = []
+running = true
 
 if casper?
-    _addPhantomError = (msg, trace) ->
+    _onPhantomError = (msg, trace) ->
+        debugger
         err = new PhantomError(msg, trace)
-        preTestErrors.push err
 
-    casper.on 'error', _addPhantomError
-    casper.on 'page.error', _addPhantomError
+        console.log err.message
+        console.log err.stack if err.stack
+
+        writer = new ReportWriter()
+        writer.createReportFile()
+
+        writer.write '<testcase classname="' + writer.htmlEscape(process.env.REPORT_FILE) + '" name="ERROR">\n'
+        writer.write '<failure message="' + writer.htmlEscape(err.message) + '">\n'
+        writer.write writer.htmlEscape(err.stack) + '\n' if err.stack?
+        writer.write '</failure>\n'
+        writer.write '</testcase>\n'
+
+        writer.closeReportFile()
+
+        # NOTE: Even if we call exit code seems to be executed afterwards. So we need this trick to prevent that the
+        #       report file is overwritten.
+        running = false
+
+        exit -1
+
+    casper.on 'error', _onPhantomError
+    casper.on 'page.error', _onPhantomError
 
 class ReportWriter
     write: (str) ->
@@ -100,6 +123,8 @@ class ReportWriter
             .replace(/>/g, '&gt;')
 
     createReportFile: ->
+        return unless running
+
         report_file = process.env.REPORT_FILE
 
         if report_file? and report_file.length > 0
@@ -173,20 +198,9 @@ class Sternchen extends ReportWriter
             passes: 0
         }
 
-    writePreTestErrors: ->
-        if preTestErrors.length > 0
-            @write '<testcase classname="' + @htmlEscape(process.env.REPORT_FILE) + '" name="ERROR">\n'
-            for err in preTestErrors
-                @write '<failure message="' + @htmlEscape(err.message) + '">\n'
-                @write @htmlEscape(err.stack) + '\n' if err.stack?
-                @write '</failure>\n'
-            @write '</testcase>\n'
-            @flush()
-
     initalizeEvents: ->
         @runner.on 'start', =>
             @createReportFile()
-            @writePreTestErrors()
 
             @stats.start = new Date
 
