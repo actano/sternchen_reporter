@@ -65,6 +65,18 @@ describe 'Sternchen Reporter', ->
 
             cb()
 
+    _checkPhantomErrorInFile = (fileName, message, cb) ->
+        _parseResultFile fileName, (err, result) ->
+            return cb err if err?
+
+            failure = result?.testsuites?.testcase?[0]?.failure?[0]
+            expect(failure).to.exist
+            expect(failure['$']?.message).to.exist
+            expect(failure['$'].message).to.equal message
+            expect(failure['_']).to.not.be.empty
+
+            cb()
+
     _newTempFileName = ->
         path.join tempDir, uuid.v4()
 
@@ -159,13 +171,10 @@ describe 'Sternchen Reporter', ->
                 "REPORT_FILE": reportFileName
 
         _triggerTest 'casper_test_preTestError.coffee', opts, (error, stdout, stderr) ->
-            _parseResultFile reportFileName, (err, result) ->
-                return done err if err?
+            expect(error).to.exist
+            expect(error.code).to.equal 255
 
-                failure = result?.testsuites?.testcase?[0]?.failure?[0]
-                expect(failure).to.exist
-                expect(failure['$']?.message).to.exist
-                expect(failure['$'].message).to.equal 'Error: Cannot find module \'does not exist\''
-                expect(failure['_']).to.not.be.empty
+            _checkPhantomErrorInFile reportFileName, 'Error: Cannot find module \'does not exist\'', done
+
 
                 done()
