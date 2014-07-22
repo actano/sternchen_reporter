@@ -87,6 +87,19 @@ describe 'Sternchen Reporter', ->
                 (err) ->
                     done err
 
+    it 'should respect the PREFIX env variable as path prefix of the test report file', (done) ->
+        reportFileName = _newTempFileName()
+
+        _createDir 'tmp/tmp', ->
+            _triggerTest 'mocha_test.coffee', {"PREFIX": tempDir, "REPORT_FILE": reportFileName}, (error, stdout, stderr) ->
+                expect(error).to.not.exist
+
+                _checkResultFromFile path.join(tempDir, reportFileName),
+                    totalTestCount: 6
+                    skippedTestCount: 4
+                    failureTestCount: 0,
+                    (err) ->
+                        done err
 
     it.skip 'should work in a casper/phantom environment', (done) ->
 
