@@ -118,8 +118,7 @@ describe 'Sternchen Reporter', ->
                 totalTestCount: 8
                 skippedTestCount: 5
                 failureTestCount: 1,
-                (err) ->
-                    done err
+                done
 
     it 'should respect the PREFIX env variable as path prefix of the test report file', (done) ->
         reportFileName = _newTempFileName()
@@ -138,8 +137,7 @@ describe 'Sternchen Reporter', ->
                     totalTestCount: 8
                     skippedTestCount: 5
                     failureTestCount: 1,
-                    (err) ->
-                        done err
+                    done
 
     it 'should work in a casper/phantom environment', (done) ->
         reportFileName = _newTempFileName()
@@ -156,9 +154,8 @@ describe 'Sternchen Reporter', ->
             _checkResultFromFile reportFileName,
                 totalTestCount: 8
                 skippedTestCount: 5
-                failureTestCount: 1
-                (err) ->
-                    done err
+                failureTestCount: 1,
+                done
 
     it.skip 'should report pre test errors in nodeJS environment', (done) ->
 
