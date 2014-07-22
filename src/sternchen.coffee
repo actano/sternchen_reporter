@@ -99,7 +99,6 @@ class ReportWriter
     createReportFile: ->
         report_file = process.env.REPORT_FILE
 
-        console.log report_file
         if report_file? and report_file.length > 0
             @package = path.join(path.dirname(report_file), path.basename(report_file, path.extname(report_file))).replace /\//g, '.'
             prefix = process.env.PREFIX
