@@ -4,7 +4,7 @@
   "description": "custom actano reporter (in memorial to my lovely mother sheep sternchen)",
     "scripts": {
       "prepublish": "cake build",
-      "test" : "cd test && `npm bin`/mocha -R tap --compilers coffee:coffee-script,coffee-trc:coffee-errors *.coffee"
+      "test" : "cd test && PATH=$PATH:`npm bin` mocha -R tap --compilers coffee:coffee-script,coffee-trc:coffee-errors *.coffee"
     },
     "engines": {
       "node": ">=0.10.0"
