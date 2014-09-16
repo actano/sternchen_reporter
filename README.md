@@ -28,3 +28,9 @@ you must use the same chai version as in your project to get it work
                                        || *  ||
                                        ~~    ~~
 
+
+TODO
+====
+
+- add support for nested describes in console and XML output (currently only the direct parent describe of a test case 
+is displayed)
