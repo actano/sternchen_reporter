@@ -192,6 +192,10 @@ class Sternchen extends ReportWriter
             passes: 0
         }
 
+    addTest: (test) ->
+        @stats.tests++
+        @currentSuite.tests.push test if @currentSuite?.tests?
+
     initalizeEvents: ->
         @runner.on 'start', =>
             @createReportFile()
@@ -210,21 +214,20 @@ class Sternchen extends ReportWriter
                 @lastSuiteTitle = test.parent.fullTitle()
                 @startSuite(test.parent)
 
-        @runner.on 'test end', (test) =>
-            @stats.tests++
-            @currentSuite.tests.push test if @currentSuite?.tests?
-
         @runner.on 'pending', (test) =>
+            @addTest test
             @stats.pending++
             test.skipped = true
             console.log('ok %d %s # SKIP -', @stats.tests + 1, @title(test))
 
         @runner.on 'pass', (test) =>
+            @addTest test
             @stats.passes++
             @currentSuite.passes++
             console.log('ok %d %s', @stats.tests + 1, @title(test))
 
         @runner.on 'fail', (test, err) =>
+            @addTest test
             # There are some cases in which test.err is undefined.
             # So we set it here to be sure that we have an error for our xml report.
             test.err = err
