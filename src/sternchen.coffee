@@ -154,6 +154,7 @@ class Sternchen extends ReportWriter
             @write ' failures="' + @currentSuite.failures + '"'
             @write ' skipped="' + (@currentSuite.tests.length - @currentSuite.failures - @currentSuite.passes) + '"'
             @write ' timestamp="' + @currentSuite.start.toUTCString() + '"'
+            @write ' make_target="' + process.env.MAKE_TARGET + '"'
             @write ' time="' + (duration / 1000) + '">\n'
 
             for test in @currentSuite.tests
