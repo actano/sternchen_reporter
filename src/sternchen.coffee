@@ -119,19 +119,25 @@ class ReportWriter
     createReportFile: ->
         return unless running
 
-        report_file = process.env.REPORT_FILE
+        reportFile = process.env.REPORT_FILE
 
-        if report_file? and report_file.length > 0
-            @package = path.join(path.dirname(report_file), path.basename(report_file, path.extname(report_file))).replace /\//g, '.'
+        if reportFile? and reportFile.length > 0
+            @package = path.join(path.dirname(reportFile), path.basename(reportFile, path.extname(reportFile))).replace /\//g, '.'
             prefix = process.env.PREFIX
-            report_file = path.join prefix, report_file if prefix?
-            @fd = fs.openSync(report_file, 'w')
+            @reportFile = path.join prefix, reportFile if prefix?
+            @tempFile = @reportFile + '.tmp'
+            @fd = fs.openSync(@tempFile, 'w')
             @write '<testsuites name="Mocha Tests">\n'
 
     closeReportFile: ->
         if @fd?
             @write '</testsuites>'
-            fs.closeSync @fd if @fd?
+            fs.closeSync @fd
+            if fs.renameSync?
+                fs.renameSync @tempFile, @reportFile
+            else
+                fs.remove @reportFile if fs.exists @reportFile
+                fs.move @tempFile, @reportFile
 
 class Sternchen extends ReportWriter
     constructor: (@runner) ->
