@@ -149,59 +149,50 @@ class Sternchen extends ReportWriter
             failures: 0
         @runner.stats = @stats
         @initalizeEvents()
+        @tests = []
 
     endSuite: =>
-        if @currentSuite?
-            duration = new Date - @currentSuite.start
+        duration = new Date - @stats.start
 
-            @write '<testsuite'
-            @write ' name="' + @htmlEscape(@currentSuite.suite.fullTitle()) + '"'
-            @write ' tests="' + @currentSuite.tests.length + '"'
-            @write ' failures="' + @currentSuite.failures + '"'
-            @write ' skipped="' + (@currentSuite.tests.length - @currentSuite.failures - @currentSuite.passes) + '"'
-            @write ' timestamp="' + @currentSuite.start.toUTCString() + '"'
-            @write ' make_target="' + process.env.MAKE_TARGET + '"'
-            @write ' time="' + (duration / 1000) + '">\n'
+        @write '<testsuite'
+        @write ' name="' + @package + '"'
+        @write ' tests="' + @tests.length + '"'
+        @write ' failures="' + @stats.failures + '"'
+        @write ' skipped="' + (@tests.length - @stats.failures - @stats.passes) + '"'
+        @write ' timestamp="' + @stats.start.toUTCString() + '"'
+        @write ' make_target="' + process.env.MAKE_TARGET + '"'
+        @write ' time="' + (duration / 1000) + '">\n'
 
-            for test in @currentSuite.tests
-                @write '<testcase'
-                @write ' classname="' + @package + '"'
-                @write ' name="' + @htmlEscape(@currentSuite.suite.title + '.' + test.title) + '"'
-                @write ' time="' + (test.duration / 1000) + '"' if not test.skipped
-                if test.state == "failed"
+        for test in @tests
+            @write '<testcase'
+            @write ' classname="' + @package + '"'
+            @write ' name="' + @htmlEscape(test.parent.fullTitle() + ' ' + test.title) + '"'
+            @write ' time="' + (test.duration / 1000) + '"' if not test.skipped
+            if test.state == "failed"
+                @write '>\n'
+                @write '<failure message="'
+                if test.err?.message?
+                    @write @htmlEscape(test.err.message)
+                else
+                    @write 'unknown error'
+                @write '">\n'
+                if test.err?.stack?
+                    @write @htmlEscape test.err.stack.replace /^/gm, '  '
+                @write '\n</failure>\n'
+                @write '</testcase>\n'
+            else
+                if test.skipped
                     @write '>\n'
-                    @write '<failure message="'
-                    if test.err?.message?
-                        @write @htmlEscape(test.err.message)
-                    else
-                        @write 'unknown error'
-                    @write '">\n'
-                    if test.err?.stack?
-                        @write @htmlEscape test.err.stack.replace /^/gm, '  '
-                    @write '\n</failure>\n'
+                    @write '<skipped/>\n'
                     @write '</testcase>\n'
                 else
-                    if test.skipped
-                        @write '>\n'
-                        @write '<skipped/>\n'
-                        @write '</testcase>\n'
-                    else
-                        @write '/>\n'
+                    @write '/>\n'
 
-            @write '</testsuite>\n'
-
-    startSuite: (suite) =>
-        @currentSuite = {
-            suite: suite,
-            tests: [],
-            start: new Date
-            failures: 0
-            passes: 0
-        }
+        @write '</testsuite>\n'
 
     addTest: (test) ->
         @stats.tests++
-        @currentSuite.tests.push test if @currentSuite?.tests?
+        @tests.push test
 
     initalizeEvents: ->
         @runner.on 'start', =>
@@ -212,15 +203,6 @@ class Sternchen extends ReportWriter
             total = @runner.grepTotal(@runner.suite)
             console.log('%d..%d', 1, total)
 
-        @runner.on 'suite', (suite) =>
-            if not suite.root
-                @stats.suites++
-                @startSuite suite
-
-        @runner.on 'suite end', (suite) =>
-            if not suite.root
-                @endSuite()
-
         @runner.on 'pending', (test) =>
             @addTest test
             @stats.pending++
@@ -230,7 +212,6 @@ class Sternchen extends ReportWriter
         @runner.on 'pass', (test) =>
             @addTest test
             @stats.passes++
-            @currentSuite.passes++
             console.log('ok %d %s', @stats.tests + 1, @title(test))
 
         @runner.on 'fail', (test, err) =>
@@ -239,7 +220,6 @@ class Sternchen extends ReportWriter
             # So we set it here to be sure that we have an error for our xml report.
             test.err = err
             @stats.failures++
-            @currentSuite.failures++ if @currentSuite?
             console.log('mocha not ok %d %s', @stats.tests, @title(test));
             if (err.stack)
                 console.log(err.stack.replace(/^/gm, '  '))
@@ -247,6 +227,7 @@ class Sternchen extends ReportWriter
         @runner.on 'end', =>
             @stats.end = new Date
             @stats.duration = @stats.end - @stats.start
+            @endSuite()
             @closeReportFile()
 
             console.log('# tests ' + (@stats.passes + @stats.failures));
