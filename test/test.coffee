@@ -115,8 +115,8 @@ describe 'Sternchen Reporter', ->
             expect(error.code).to.equal 1
 
             _checkResultFromFile reportFileName,
-                totalTestCount: 8
-                skippedTestCount: 5
+                totalTestCount: 4
+                skippedTestCount: 1
                 failureTestCount: 1,
                 done
 
@@ -134,8 +134,8 @@ describe 'Sternchen Reporter', ->
                 expect(error.code).to.equal 1
 
                 _checkResultFromFile path.join(tempDir, reportFileName),
-                    totalTestCount: 8
-                    skippedTestCount: 5
+                    totalTestCount: 4
+                    skippedTestCount: 1
                     failureTestCount: 1,
                     done
 
@@ -152,8 +152,8 @@ describe 'Sternchen Reporter', ->
             expect(error.code).to.equal 1
 
             _checkResultFromFile reportFileName,
-                totalTestCount: 8
-                skippedTestCount: 5
+                totalTestCount: 4
+                skippedTestCount: 1
                 failureTestCount: 1,
                 done
 
