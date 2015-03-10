@@ -213,13 +213,13 @@ class Sternchen extends ReportWriter
             console.log('%d..%d', 1, total)
 
         @runner.on 'suite', (suite) =>
-            suite.root or @stats.suites++
+            if not suite.root
+                @stats.suites++
+                @startSuite suite
 
-        @runner.on 'test', (test) =>
-            if test.parent.fullTitle() != @lastSuiteTitle
+        @runner.on 'suite end', (suite) =>
+            if not suite.root
                 @endSuite()
-                @lastSuiteTitle = test.parent.fullTitle()
-                @startSuite(test.parent)
 
         @runner.on 'pending', (test) =>
             @addTest test
@@ -247,7 +247,6 @@ class Sternchen extends ReportWriter
         @runner.on 'end', =>
             @stats.end = new Date
             @stats.duration = @stats.end - @stats.start
-            @endSuite()
             @closeReportFile()
 
             console.log('# tests ' + (@stats.passes + @stats.failures));
