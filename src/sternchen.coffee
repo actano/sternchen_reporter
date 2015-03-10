@@ -119,12 +119,12 @@ class ReportWriter
     createReportFile: ->
         return unless running
 
-        reportFile = process.env.REPORT_FILE
+        @reportFile = process.env.REPORT_FILE
 
-        if reportFile? and reportFile.length > 0
-            @package = path.join(path.dirname(reportFile), path.basename(reportFile, path.extname(reportFile))).replace /\//g, '.'
+        if @reportFile? and @reportFile.length > 0
+            @package = path.join(path.dirname(@reportFile), path.basename(@reportFile, path.extname(@reportFile))).replace /\//g, '.'
             prefix = process.env.PREFIX
-            @reportFile = path.join prefix, reportFile if prefix?
+            @reportFile = path.join prefix, @reportFile if prefix?
             @tempFile = @reportFile + '.tmp'
             @fd = fs.openSync(@tempFile, 'w')
             @write '<testsuites name="Mocha Tests">\n'
