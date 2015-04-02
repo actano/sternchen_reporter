@@ -222,6 +222,9 @@ class Sternchen extends ReportWriter
             console.log('ok %d %s', @stats.tests + 1, @title(test))
 
         @runner.on 'fail', (test, err) =>
+            if test.onError?
+                test.stdout = test.onError path.dirname @reportFile
+
             @addTest test
             # There are some cases in which test.err is undefined.
             # So we set it here to be sure that we have an error for our xml report.
