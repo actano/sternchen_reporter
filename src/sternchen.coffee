@@ -168,8 +168,16 @@ class Sternchen extends ReportWriter
             @write ' classname="' + @package + '"'
             @write ' name="' + @htmlEscape(test.parent.fullTitle() + ' ' + test.title) + '"'
             @write ' time="' + (test.duration / 1000) + '"' if not test.skipped
+            @write '>\n'
+
+            if test.stdout?
+                @write '<system-out>\n'
+                @write '<![CDATA['
+                @write test.stdout
+                @write ']]>\n'
+                @write '</system-out>\n'
+
             if test.state == "failed"
-                @write '>\n'
                 @write '<failure message="'
                 if test.err?.message?
                     @write @htmlEscape(test.err.message)
@@ -182,11 +190,10 @@ class Sternchen extends ReportWriter
                 @write '</testcase>\n'
             else
                 if test.skipped
-                    @write '>\n'
                     @write '<skipped/>\n'
                     @write '</testcase>\n'
                 else
-                    @write '/>\n'
+                    @write '</testcase>\n'
 
         @write '</testsuite>\n'
 
