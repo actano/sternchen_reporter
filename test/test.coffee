@@ -193,3 +193,34 @@ describe 'Sternchen Reporter', ->
             expect(error.code).to.equal 255
 
             _checkPhantomErrorInFile reportFileName, 'Error: pre-test error in page', done
+
+    it 'should call onError function of a test and write its return value to system-out section', (done) ->
+        reportFileName = _newTempFileName()
+
+        opts =
+            env:
+                "REPORT_FILE": reportFileName
+
+        _triggerTest 'onError_test.coffee', opts, (error, stdout, stderr) ->
+            _parseResultFile reportFileName, (err, result) ->
+                return done err if err?
+
+                testcases = result?.testsuites?.testsuite?[0]?.testcase
+                testcaseByName = {}
+
+                for testcase in testcases
+                    attrs = testcase['$']
+                    testcaseByName[attrs.name] = testcase
+
+                # console.log testcaseByName
+                expect(testcaseByName['testsuite pass']).to.exist
+                expect(testcaseByName['testsuite pass']['system-out']).to.not.exist
+
+                expect(testcaseByName['testsuite skip']).to.exist
+                expect(testcaseByName['testsuite skip']['system-out']).to.not.exist
+
+                expect(testcaseByName['testsuite fail']).to.exist
+                expect(testcaseByName['testsuite fail']['system-out']).to.exist
+                expect(testcaseByName['testsuite fail']['system-out'][0]).to.contain 'onError called with tmp'
+
+                done()
