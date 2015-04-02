@@ -194,14 +194,14 @@ describe 'Sternchen Reporter', ->
 
             _checkPhantomErrorInFile reportFileName, 'Error: pre-test error in page', done
 
-    it 'should call onError function of a test and write its return value to system-out section', (done) ->
+    it 'should call onFailure function of a test and write its return value to system-out section', (done) ->
         reportFileName = _newTempFileName()
 
         opts =
             env:
                 "REPORT_FILE": reportFileName
 
-        _triggerTest 'onError_test.coffee', opts, (error, stdout, stderr) ->
+        _triggerTest 'onFailure_test.coffee', opts, (error, stdout, stderr) ->
             _parseResultFile reportFileName, (err, result) ->
                 return done err if err?
 
@@ -213,14 +213,14 @@ describe 'Sternchen Reporter', ->
                     testcaseByName[attrs.name] = testcase
 
                 # console.log testcaseByName
-                expect(testcaseByName['testsuite pass']).to.exist
-                expect(testcaseByName['testsuite pass']['system-out']).to.not.exist
+                expect(testcaseByName['testsuite pass'], 'testsuite pass').to.exist
+                expect(testcaseByName['testsuite pass']['system-out'], 'testsuite pass system-out').to.not.exist
 
-                expect(testcaseByName['testsuite skip']).to.exist
-                expect(testcaseByName['testsuite skip']['system-out']).to.not.exist
+                expect(testcaseByName['testsuite skip'], 'testsuite skip').to.exist
+                expect(testcaseByName['testsuite skip']['system-out'], 'testsuite skip system-out').to.not.exist
 
-                expect(testcaseByName['testsuite fail']).to.exist
-                expect(testcaseByName['testsuite fail']['system-out']).to.exist
-                expect(testcaseByName['testsuite fail']['system-out'][0]).to.contain 'onError called with tmp'
+                expect(testcaseByName['testsuite fail'], 'testsuite fail').to.exist
+                expect(testcaseByName['testsuite fail']['system-out'], 'testsuite fail system-out').to.exist
+                expect(testcaseByName['testsuite fail']['system-out'][0]).to.contain 'onFailure called with tmp'
 
                 done()

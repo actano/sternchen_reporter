@@ -1,6 +1,6 @@
 beforeEach ->
-    @currentTest.onError = (testReportDir) ->
-        return "onError called with #{testReportDir}"
+    @currentTest.onFailure = (testReportDir) ->
+        return "onFailure called with #{testReportDir}"
 
 describe 'testsuite', ->
     it 'pass', (done) ->
