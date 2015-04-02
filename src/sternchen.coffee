@@ -222,8 +222,11 @@ class Sternchen extends ReportWriter
             console.log('ok %d %s', @stats.tests + 1, @title(test))
 
         @runner.on 'fail', (test, err) =>
-            if test.onFailure?
-                test.stdout = test.onFailure path.dirname @reportFile
+            if test.onFailureHandlers?.length
+                test.stdout ?= ''
+
+                for failureHandler in test.onFailureHandlers
+                    test.stdout += failureHandler path.dirname @reportFile
 
             @addTest test
             # There are some cases in which test.err is undefined.
