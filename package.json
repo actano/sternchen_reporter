@@ -1,14 +1,14 @@
 {
   "name": "sternchen",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "custom actano reporter (in memorial to my lovely mother sheep sternchen)",
-    "scripts": {
-      "prepublish": "cake build",
-      "test" : "cd test && PATH=$PATH:`npm bin` mocha -R tap --compilers coffee:coffee-script,coffee-trc:coffee-errors *.coffee"
-    },
-    "engines": {
-      "node": ">=0.10.0"
-    },
+  "scripts": {
+    "prepublish": "cake build",
+    "test": "cd test && PATH=$PATH:`npm bin` mocha -R tap --compilers coffee:coffee-script,coffee-trc:coffee-errors *.coffee"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
   "dependencies": {
     "coffee-script": ">=1.6.2",
     "chai": "*"
