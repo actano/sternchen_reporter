@@ -7,6 +7,11 @@
 require('chai').Assertion.includeStack = true
 fs = require 'fs'
 
+{REPORT_FILE, PREFIX, MAKE_TARGET, CLASS_NAME} = process.env
+CLASS_NAME ?= REPORT_FILE
+if PREFIX? and REPORT_FILE?
+    REPORT_FILE = path.join PREFIX, REPORT_FILE
+
 if phantom?
     # if we run in phantomjs, we can't require node modules
     join = ->
@@ -82,7 +87,7 @@ if casper?
         writer = new ReportWriter()
         writer.createReportFile()
 
-        writer.write '<testcase classname="' + writer.htmlEscape(process.env.REPORT_FILE) + '" name="ERROR">\n'
+        writer.write '<testcase classname="' + writer.htmlEscape(CLASS_NAME) + '" name="ERROR">\n'
         writer.write '<failure message="' + writer.htmlEscape(err.message) + '">\n'
         writer.write writer.htmlEscape(err.stack) + '\n' if err.stack?
         writer.write '</failure>\n'
@@ -119,13 +124,9 @@ class ReportWriter
     createReportFile: ->
         return unless running
 
-        @reportFile = process.env.REPORT_FILE
-
-        if @reportFile? and @reportFile.length > 0
-            @package = path.join(path.dirname(@reportFile), path.basename(@reportFile, path.extname(@reportFile))).replace /\//g, '.'
-            prefix = process.env.PREFIX
-            @reportFile = path.join prefix, @reportFile if prefix?
-            @tempFile = @reportFile + '.tmp'
+        if REPORT_FILE? and REPORT_FILE.length > 0
+            @package = path.join(path.dirname(REPORT_FILE), path.basename(REPORT_FILE, path.extname(REPORT_FILE))).replace /\//g, '.'
+            @tempFile = REPORT_FILE + '.tmp'
             @fd = fs.openSync(@tempFile, 'w')
             @write '<testsuites name="Mocha Tests">\n'
 
@@ -134,10 +135,10 @@ class ReportWriter
             @write '</testsuites>'
             fs.closeSync @fd
             if fs.renameSync?
-                fs.renameSync @tempFile, @reportFile
+                fs.renameSync @tempFile, REPORT_FILE
             else
-                fs.remove @reportFile if fs.exists @reportFile
-                fs.move @tempFile, @reportFile
+                fs.remove REPORT_FILE if fs.exists REPORT_FILE
+                fs.move @tempFile, REPORT_FILE
 
 class Sternchen extends ReportWriter
     constructor: (@runner) ->
@@ -160,7 +161,7 @@ class Sternchen extends ReportWriter
         @write ' failures="' + @stats.failures + '"'
         @write ' skipped="' + (@tests.length - @stats.failures - @stats.passes) + '"'
         @write ' timestamp="' + @stats.start.toUTCString() + '"'
-        @write ' make_target="' + process.env.MAKE_TARGET + '"'
+        @write ' make_target="' + @htmlEscape(MAKE_TARGET) + '"'
         @write ' time="' + (duration / 1000) + '">\n'
 
         for test in @tests
@@ -226,7 +227,7 @@ class Sternchen extends ReportWriter
                 test.stdout ?= ''
 
                 for failureHandler in test.onFailureHandlers
-                    test.stdout += failureHandler path.dirname @reportFile
+                    test.stdout += failureHandler path.dirname REPORT_FILE
 
             @addTest test
             # There are some cases in which test.err is undefined.
