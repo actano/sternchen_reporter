@@ -33,11 +33,9 @@ class ReportWriter
             .replace(/>/g, '&gt;')
 
     createReportFile: ->
-        return unless running
-
         if REPORT_FILE? and REPORT_FILE.length > 0
             # Create directory if it doesn't exist. fs.openSync blocks forever if the directory doesn't exist beforehand.
-            directory = path.dirname @reportFile
+            directory = path.dirname REPORT_FILE
             mkdirp.sync directory
 
             @package = path.join(path.dirname(REPORT_FILE), path.basename(REPORT_FILE, path.extname(REPORT_FILE))).replace /\//g, '.'
