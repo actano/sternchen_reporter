@@ -16,9 +16,6 @@
   },
   "devDependencies": {
     "coffee-errors": "*",
-    "casperjs": "*",
-    "mocha-casperjs": "*",
-    "phantomjs": "*",
     "mocha": "*",
     "xml2js": "*",
     "node-uuid": "*",

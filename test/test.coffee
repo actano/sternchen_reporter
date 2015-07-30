@@ -15,14 +15,10 @@ describe 'Sternchen Reporter', ->
         "--compilers coffee:coffee-script,coffee-trc:coffee-errors " +
         "#{__dirname + '/testData/' + fileName}"
 
-    _casperCommandLine = (fileName) ->
-        "mocha-casperjs --expect --reporter=#{__dirname}/../lib/index.js #{__dirname}/testData/#{fileName}"
-
     _triggerTest = (fileName, opts, cb) ->
         if typeof opts is 'function'
             cb = opts
             opts =
-                casper: false
                 env: {}
 
         command = ''
@@ -30,10 +26,7 @@ describe 'Sternchen Reporter', ->
         for key, value of opts.env
             command += "#{key}=#{value} "
 
-        if opts.casper
-            command += _casperCommandLine fileName
-        else
-            command += _mochaCommandLine fileName
+        command += _mochaCommandLine fileName
 
         exec command, cb
 
@@ -62,18 +55,6 @@ describe 'Sternchen Reporter', ->
             expect(results.tests).to.equal "#{totalTestCount}"
             expect(results.skipped).to.equal "#{skippedTestCount}"
             expect(results.failures).to.equal "#{failureTestCount}"
-
-            cb()
-
-    _checkPhantomErrorInFile = (fileName, message, cb) ->
-        _parseResultFile fileName, (err, result) ->
-            return cb err if err?
-
-            failure = result?.testsuites?.testcase?[0]?.failure?[0]
-            expect(failure).to.exist
-            expect(failure['$']?.message).to.exist
-            expect(failure['$'].message).to.equal message
-            expect(failure['_']).to.not.be.empty
 
             cb()
 
@@ -139,24 +120,6 @@ describe 'Sternchen Reporter', ->
                     failureTestCount: 1,
                     done
 
-    it 'should work in a casper/phantom environment', (done) ->
-        reportFileName = _newTempFileName()
-
-        opts =
-            casper: true
-            env:
-                "REPORT_FILE": reportFileName
-
-        _triggerTest 'casper_test.coffee', opts, (error, stdout, stderr) ->
-            expect(error).to.exist
-            expect(error.code).to.equal 1
-
-            _checkResultFromFile reportFileName,
-                totalTestCount: 8
-                skippedTestCount: 5
-                failureTestCount: 1,
-                done
-
     ###
         We can't check this here. It has nothing to do with sternchen reporter.
 
@@ -165,34 +128,6 @@ describe 'Sternchen Reporter', ->
     ###
     #it.skip 'should report pre test errors in nodeJS environment', (done) ->
     #    done()
-
-    it 'should report pre test errors in casper/phantom environment', (done) ->
-        reportFileName = _newTempFileName()
-
-        opts =
-            casper: true
-            env:
-                "REPORT_FILE": reportFileName
-
-        _triggerTest 'casper_test_preTestError.coffee', opts, (error, stdout, stderr) ->
-            expect(error).to.exist
-            expect(error.code).to.equal 255
-
-            _checkPhantomErrorInFile reportFileName, 'Error: Cannot find module \'does not exist\'', done
-
-    it 'should report uncaught error in HTML page in casper/phantom environment', (done) ->
-        reportFileName = _newTempFileName()
-
-        opts =
-            casper: true
-            env:
-                "REPORT_FILE": reportFileName
-
-        _triggerTest 'casper_test_preTestError_inPage.coffee', opts, (error, stdout, stderr) ->
-            expect(error).to.exist
-            expect(error.code).to.equal 255
-
-            _checkPhantomErrorInFile reportFileName, 'Error: pre-test error in page', done
 
     it 'should call onFailure function of a test and write its return value to system-out section', (done) ->
         reportFileName = _newTempFileName()
