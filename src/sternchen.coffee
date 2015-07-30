@@ -7,14 +7,13 @@
 require('chai').Assertion.includeStack = true
 fs = require 'fs'
 mkdirp = require 'mkdirp'
+path = require 'path'
+exit = process.exit
 
 {REPORT_FILE, PREFIX, MAKE_TARGET, CLASS_NAME} = process.env
 CLASS_NAME ?= REPORT_FILE
 if PREFIX? and REPORT_FILE?
     REPORT_FILE = path.join PREFIX, REPORT_FILE
-
-path = require 'path'
-exit = process.exit
 
 class ReportWriter
     write: (str) ->
