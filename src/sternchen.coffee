@@ -6,6 +6,7 @@
 
 require('chai').Assertion.includeStack = true
 fs = require 'fs'
+mkdirp = require 'mkdirp'
 
 {REPORT_FILE, PREFIX, MAKE_TARGET, CLASS_NAME} = process.env
 CLASS_NAME ?= REPORT_FILE
@@ -125,6 +126,10 @@ class ReportWriter
         return unless running
 
         if REPORT_FILE? and REPORT_FILE.length > 0
+            # Create directory if it doesn't exist. fs.openSync blocks forever if the directory doesn't exist beforehand.
+            directory = path.dirname @reportFile
+            mkdirp.sync directory
+
             @package = path.join(path.dirname(REPORT_FILE), path.basename(REPORT_FILE, path.extname(REPORT_FILE))).replace /\//g, '.'
             @tempFile = REPORT_FILE + '.tmp'
             @fd = fs.openSync(@tempFile, 'w')
