@@ -10,10 +10,7 @@ mkdirp = require 'mkdirp'
 path = require 'path'
 exit = process.exit
 
-{REPORT_FILE, PREFIX, MAKE_TARGET, CLASS_NAME} = process.env
-CLASS_NAME ?= REPORT_FILE
-if PREFIX? and REPORT_FILE?
-    REPORT_FILE = path.join PREFIX, REPORT_FILE
+{REPORT_FILE, PREFIX, MAKE_TARGET} = process.env
 
 class ReportWriter
     write: (str) ->
@@ -33,13 +30,17 @@ class ReportWriter
             .replace(/>/g, '&gt;')
 
     createReportFile: ->
-        if REPORT_FILE? and REPORT_FILE.length > 0
+        @reportFile = REPORT_FILE
+
+        if @reportFile? and @reportFile.length > 0
+            @package = path.join(path.dirname(@reportFile), path.basename(@reportFile, path.extname(@reportFile))).replace /\//g, '.'
+            @reportFile = path.join(PREFIX, @reportFile) if PREFIX?
+
             # Create directory if it doesn't exist. fs.openSync blocks forever if the directory doesn't exist beforehand.
-            directory = path.dirname REPORT_FILE
+            directory = path.dirname @reportFile
             mkdirp.sync directory
 
-            @package = path.join(path.dirname(REPORT_FILE), path.basename(REPORT_FILE, path.extname(REPORT_FILE))).replace /\//g, '.'
-            @tempFile = REPORT_FILE + '.tmp'
+            @tempFile = @reportFile + '.tmp'
             @fd = fs.openSync(@tempFile, 'w')
             @write '<testsuites name="Mocha Tests">\n'
 
@@ -48,10 +49,10 @@ class ReportWriter
             @write '</testsuites>'
             fs.closeSync @fd
             if fs.renameSync?
-                fs.renameSync @tempFile, REPORT_FILE
+                fs.renameSync @tempFile, @reportFile
             else
-                fs.remove REPORT_FILE if fs.exists REPORT_FILE
-                fs.move @tempFile, REPORT_FILE
+                fs.remove @reportFile if fs.exists @reportFile
+                fs.move @tempFile, @reportFile
 
 class Sternchen extends ReportWriter
     constructor: (@runner) ->
@@ -140,7 +141,7 @@ class Sternchen extends ReportWriter
                 test.stdout ?= ''
 
                 for failureHandler in test.onFailureHandlers
-                    test.stdout += failureHandler path.dirname REPORT_FILE
+                    test.stdout += failureHandler path.dirname @reportFile
 
             @addTest test
             # There are some cases in which test.err is undefined.
