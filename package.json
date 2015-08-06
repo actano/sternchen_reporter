@@ -10,8 +10,9 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "coffee-script": ">=1.6.2",
     "chai": "*",
+    "coffee-script": ">=1.6.2",
+    "debug": "^2.2.0",
     "mkdirp": "^0.5.1"
   },
   "devDependencies": {

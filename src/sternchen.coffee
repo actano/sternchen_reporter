@@ -9,6 +9,7 @@ fs = require 'fs'
 mkdirp = require 'mkdirp'
 path = require 'path'
 exit = process.exit
+debug = require('debug')('sternchen')
 
 {REPORT_FILE, PREFIX, MAKE_TARGET} = process.env
 
@@ -41,6 +42,7 @@ class ReportWriter
             mkdirp.sync directory
 
             @tempFile = @reportFile + '.tmp'
+            debug "creating temp report file #{@tempFile}"
             @fd = fs.openSync(@tempFile, 'w')
             @write '<testsuites name="Mocha Tests">\n'
 
@@ -48,6 +50,7 @@ class ReportWriter
         if @fd?
             @write '</testsuites>'
             fs.closeSync @fd
+            debug "moving temp file to #{@reportFile}"
             if fs.renameSync?
                 fs.renameSync @tempFile, @reportFile
             else
@@ -56,6 +59,7 @@ class ReportWriter
 
 class Sternchen extends ReportWriter
     constructor: (@runner) ->
+        debug 'creating sternchen reporter'
         @stats =
             suites: 0
             tests: 0
@@ -67,6 +71,7 @@ class Sternchen extends ReportWriter
         @tests = []
 
     endSuite: =>
+        debug 'writing XML report'
         duration = new Date - @stats.start
 
         @write '<testsuite'
@@ -113,11 +118,13 @@ class Sternchen extends ReportWriter
         @write '</testsuite>\n'
 
     addTest: (test) ->
+        debug "adding test '#{test?.title}'"
         @stats.tests++
         @tests.push test
 
     initalizeEvents: ->
         @runner.on 'start', =>
+            debug 'run started'
             @createReportFile()
 
             @stats.start = new Date
@@ -126,17 +133,20 @@ class Sternchen extends ReportWriter
             console.log('%d..%d', 1, total)
 
         @runner.on 'pending', (test) =>
+            debug "pending test '#{test?.title}'"
             @addTest test
             @stats.pending++
             test.skipped = true
             console.log('ok %d %s # SKIP -', @stats.tests + 1, @title(test))
 
         @runner.on 'pass', (test) =>
+            debug "test '#{test?.title}' passed"
             @addTest test
             @stats.passes++
             console.log('ok %d %s', @stats.tests + 1, @title(test))
 
         @runner.on 'fail', (test, err) =>
+            debug "test '#{test?.title}' failed"
             if test.onFailureHandlers?.length
                 test.stdout ?= ''
 
@@ -153,6 +163,7 @@ class Sternchen extends ReportWriter
                 console.log(err.stack.replace(/^/gm, '  '))
 
         @runner.on 'end', =>
+            debug 'run ended'
             @stats.end = new Date
             @stats.duration = @stats.end - @stats.start
             @endSuite()
