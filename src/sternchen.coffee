@@ -3,8 +3,7 @@
 ###
 
 # set the global state to enforce stacktrace for chai AssertionErrors
-
-require('chai').Assertion.includeStack = true
+require('chai').config.includeStack = true
 fs = require 'fs'
 mkdirp = require 'mkdirp'
 path = require 'path'
