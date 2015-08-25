@@ -3,7 +3,7 @@
   "version": "0.5.5",
   "description": "custom actano reporter (in memorial to my lovely mother sheep sternchen)",
   "scripts": {
-    "prepublish": "coffee --compile --output lib/ src/",
+    "postinstall": "coffee --compile --output lib/ src/",
     "test": "cd test && PATH=$PATH:`npm bin` mocha -R tap --compilers coffee:coffee-script,coffee-trc:coffee-errors *.coffee"
   },
   "engines": {
