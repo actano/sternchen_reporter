@@ -1,5 +1,6 @@
 sternchen_reporter
 ==================
+xml reporter for jenkins
 
 custom actano mocha reporter (in memorial of my lovely mother sheep sternchen)
 
@@ -29,8 +30,15 @@ you must use the same chai version as in your project to get it work
                                        ~~    ~~
 
 
-TODO
+Motivation
 ====
+This reporter produces XML files.
 
-- add support for nested describes in console and XML output (currently only the direct parent describe of a test case 
-is displayed)
+xunit reporter of mocha does also generate xml files, but they are not
+usefull (at least in jenkins) because it's optimized for Java package structure.
+The results are grouped (splitted) by a `.` instead of by the `describe` and `it`
+hierarchy of the test file.
+
+
+
+The console output is same as spec reporter.
