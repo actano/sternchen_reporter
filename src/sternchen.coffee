@@ -35,7 +35,6 @@ class ReportWriter
 
     createReportFile: ->
         @reportFile = REPORT_FILE
-        console.log '>>>>>>>>> report file: ', @reportFile
 
         if @reportFile? and @reportFile.length > 0
             @package = path.join(path.dirname(@reportFile), path.basename(@reportFile, path.extname(@reportFile))).replace /\//g, '.'
