@@ -1,6 +1,6 @@
 {
   "name": "sternchen",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "custom actano reporter (in memorial to my lovely mother sheep sternchen)",
   "scripts": {
     "postinstall": "coffee --compile --output lib/ src/",
