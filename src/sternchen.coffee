@@ -10,6 +10,10 @@ path = require 'path'
 exit = process.exit
 debug = require('debug')('sternchen')
 
+Base = require 'mocha/lib/reporters/base'
+cursor = Base.cursor
+color = Base.color
+
 {REPORT_FILE, PREFIX, MAKE_TARGET} = process.env
 
 class ReportWriter
@@ -31,6 +35,7 @@ class ReportWriter
 
     createReportFile: ->
         @reportFile = REPORT_FILE
+        console.log '>>>>>>>>> report file: ', @reportFile
 
         if @reportFile? and @reportFile.length > 0
             @package = path.join(path.dirname(@reportFile), path.basename(@reportFile, path.extname(@reportFile))).replace /\//g, '.'
@@ -121,7 +126,13 @@ class Sternchen extends ReportWriter
         @stats.tests++
         @tests.push test
 
+    # spec reporter
+    indents = 0
+    indent = ->
+        Array(indents).join('  ')
+
     initalizeEvents: ->
+
         @runner.on 'start', =>
             debug 'run started'
             @createReportFile()
@@ -129,20 +140,41 @@ class Sternchen extends ReportWriter
             @stats.start = new Date
 
             total = @runner.grepTotal(@runner.suite)
-            console.log('%d..%d', 1, total)
+
+            # spec reporter
+            console.log();
+
+        # spec reporter
+        @runner.on 'suite', (suite) ->
+            ++indents
+            console.log(color('suite', '%s%s'), indent(), suite.title)
+
+        # spec reporter
+        @runner.on 'suite end', (suite) ->
+            --indents
+            console.log() if 1 is indents
 
         @runner.on 'pending', (test) =>
             debug "pending test '#{test?.title}'"
             @addTest test
             @stats.pending++
             test.skipped = true
-            console.log('ok %d %s # SKIP -', @stats.tests + 1, @title(test))
+
+            # spec reporter
+            fmt = indent() + color('pending', '  - %s')
+            console.log(fmt, test.title);
 
         @runner.on 'pass', (test) =>
             debug "test '#{test?.title}' passed"
             @addTest test
             @stats.passes++
-            console.log('ok %d %s', @stats.tests + 1, @title(test))
+
+            # spec reporter
+            fmt = indent() +
+                color('checkmark', '  ' + Base.symbols.ok) +
+                color('pass', ' %s')
+            cursor.CR()
+            console.log(fmt, test.title)
 
         @runner.on 'fail', (test, err) =>
             debug "test '#{test?.title}' failed"
@@ -157,7 +189,11 @@ class Sternchen extends ReportWriter
             # So we set it here to be sure that we have an error for our xml report.
             test.err = err
             @stats.failures++
-            console.log('mocha not ok %d %s', @stats.tests, @title(test));
+
+            # spec reporter
+            cursor.CR()
+            console.log(indent() + color('fail', '  %d) %s'), @stats.failures, test.title)
+
             if (err.stack)
                 console.log(err.stack.replace(/^/gm, '  '))
 
